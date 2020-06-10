@@ -7,19 +7,33 @@ import  { DISHES} from '../shared/dishes';
 })
 
 export class DishService {
+  
+   data:boolean = false;
 
   constructor() { }
 
   getDishes() : Promise<Dish[]>{
-    return Promise.resolve(DISHES);
+    console.log(this);
+    if(this.data) {
+      return Promise.resolve(DISHES);
+    }else {
+      this.data = true;
+    return new Promise ((resolve) => {
+      setTimeout(() => resolve(DISHES),2000);
+    });
   }
-
+  }
+  
   getDish(id:string): Promise<Dish>{
-    return Promise.resolve(DISHES.filter((dish) => (dish.id === id))[0]);
+    return new Promise ((resolve) => {
+      setTimeout(() => resolve(DISHES.filter((dish) => (dish.id === id))[0]),2000);
+    });
   }
 
   getFeaturedDish(): Promise<Dish>{
-    return Promise.resolve(DISHES.filter((dish) => (dish.featured))[0]);
+    return new Promise ((resolve) => {
+      setTimeout(() => resolve(DISHES.filter((dish) => (dish.featured))[0]),2000);
+    });
   }
 
 }
