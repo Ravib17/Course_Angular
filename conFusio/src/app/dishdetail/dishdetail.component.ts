@@ -1,4 +1,4 @@
-import { Component, OnInit,Input , ViewChild } from '@angular/core';
+import { Component, OnInit,Input , ViewChild, Inject } from '@angular/core';
 import { Dish } from '../shared/dish'
 import {DishService} from '../services/dish.service';
 import {Params,ActivatedRoute} from '@angular/router';
@@ -6,6 +6,7 @@ import {Location} from '@angular/common'
 import { switchMap } from 'rxjs/operators';
 import { Comment } from '../shared/comment';
 import {FormBuilder,FormGroup,Validator, Validators} from '@angular/forms';
+
 
 
 @Component({
@@ -20,6 +21,7 @@ export class DishdetailComponent implements OnInit {
   dishIds : string[];
   prev : string;
   next : string;
+  errorMsg : string;
 
   @ViewChild("cform") commentFormDirective;
 
@@ -45,7 +47,8 @@ export class DishdetailComponent implements OnInit {
 
   constructor(private dishservice: DishService,
     private route: ActivatedRoute,
-    private location: Location, private fb:FormBuilder ) {
+    private location: Location, private fb:FormBuilder ,
+    @Inject("BaseURL") private baseURL ) {
       this.createForm();
      }
 
@@ -91,19 +94,23 @@ export class DishdetailComponent implements OnInit {
     this.comment.comment = this.commentForm.value.comment;
     this.comment.date = (new Date()).toISOString();
     this.dish.comments.push(this.comment);
+
     this.commentFormDirective.resetForm();
+    
      this.commentForm.reset({
        author:'',
        rating:5,
        comment:''
      });
+     //this.commentFormDirective.resetForm({rating:5});
     
   }
 
   ngOnInit() {
     this.dishservice.getDishIds().subscribe(dishIds => this.dishIds = dishIds);
     this.route.params.pipe(switchMap((params: Params) => this.dishservice.getDish(params['id'])))
-    .subscribe(dish => { this.dish = dish; this.setPrevNext(dish.id); });
+    .subscribe(dish => { this.dish = dish; this.setPrevNext(dish.id); } , 
+    errMsg=> this.errorMsg = <any>errMsg);
     //const id = this.route.snapshot.params['id'];
     // this.dishservice.getDish(id).subscribe((dish)=> this.dish =dish);
 
