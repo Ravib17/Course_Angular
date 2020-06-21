@@ -1,14 +1,17 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import {FormBuilder,FormGroup,Validator, Validators} from '@angular/forms';
 import {Feedback , ContactType} from '../shared/feedback';
-import { flyInOut } from '../animations/app.animation';
+import { flyInOut ,expand } from '../animations/app.animation';
 import { throws } from 'assert';
+import {FeedbackService} from '../services/feedback.service';
+
 @Component({
   selector: 'app-contact',
   templateUrl: './contact.component.html',
   styleUrls: ['./contact.component.scss'],
   animations:[
-   flyInOut()
+   flyInOut(),
+   expand()
   ],
   host : {
     '[@flyInOut]':'true',
@@ -21,7 +24,12 @@ export class ContactComponent implements OnInit {
   feedbackForm : FormGroup;
   feedback : Feedback;
   contactType = ContactType;
-
+  errorMsg : string;
+  showForm : Boolean =  true; 
+  isWaitingForResponse : Boolean = false;
+  showPreview : Boolean = false;
+  previewfeedback : Feedback;
+  
   formErrors = {
     'firstname': '',
     'lastname': '',
@@ -50,7 +58,7 @@ export class ContactComponent implements OnInit {
     },
   };
 
-  constructor(private fb:FormBuilder) { 
+  constructor(private fb:FormBuilder , private feedbackService : FeedbackService) { 
     this.createForm();
   }
 
@@ -84,7 +92,6 @@ export class ContactComponent implements OnInit {
     const form = this.feedbackForm;
 
     for(const field in this.formErrors){
-      console.log("here");
         if(this.formErrors.hasOwnProperty(field)){
           this.formErrors[field] = '';
           const control = form.get(field);
@@ -106,17 +113,31 @@ export class ContactComponent implements OnInit {
   onSubmit(){
     this.feedback = this.feedbackForm.value;
     console.log(this.feedback);
-    this.feedbackForm.reset({
-      firstname:  '',
-      lastname:  '',
-      telnum:  0,
-      email:  '',
-      agree: false,
-      contacttype: 'None',
-      message: ''
+    this.showForm = false;
+    this.isWaitingForResponse = true;
+    this.feedbackService.submitFeedback(this.feedback).subscribe(feedback => {
+      this.previewfeedback = feedback;
+      this.showPreview = true;
+      this.isWaitingForResponse = false;
+      setTimeout(()=>{
+          this.showPreview = false;
+          this.showForm = true;
+          
+          this.feedbackForm.reset({
+            firstname:  '',
+            lastname:  '',
+            telnum:  0,
+            email:  '',
+            agree: false,
+            contacttype: 'None',
+            message: ''
+        });
+      
+      // this.feedbackFormDirective.resetForm(); //this not required as *ngIf is used for form
+                                                  
+      },5000)
+    }, errMsg => this.errorMsg = <any> errMsg);
 
-    });
-    this.feedbackFormDirective.resetForm();
   }
 
 }
